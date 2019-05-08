@@ -1,0 +1,10 @@
+
+\.idea/
+
+seedrandom/__pycache__/
+
+build/
+
+dist/
+
+seedrandom.egg-info/
