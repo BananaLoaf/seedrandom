@@ -1,14 +1,12 @@
 import setuptools
-
-NAME = "seedrandom"
-VERSION = "1.4"
+from seedrandom import __version__
 
 with open("README.md", "r") as file:
     long_description = file.read()
 
 setuptools.setup(
-    name=NAME,
-    version=VERSION,
+    name="seedrandom",
+    version=__version__,
     author="BananaLoaf",
     author_email="bananaloaf@protonmail.com",
     keywords=["random", "seed", "generator", "hash", "int", "float", "bool", "bytes"],
@@ -16,8 +14,8 @@ setuptools.setup(
     description="Random number generation based on the seed",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url=f"https://github.com/BananaLoaf/{NAME}",
-    download_url=f"https://github.com/BananaLoaf/{NAME}/archive/v{VERSION}.tar.gz",
+    url=f"https://github.com/BananaLoaf/seedrandom",
+    download_url=f"https://github.com/BananaLoaf/seedrandom/archive/v{__version__}.tar.gz",
     packages=setuptools.find_packages(),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
