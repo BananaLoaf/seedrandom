@@ -38,11 +38,11 @@ def test_from_int():
 
 ################################################################
 def test_randint():
-    assert seed.randint(min=0, max=100) == 88
+    assert seed.randint(a=0, b=100) == 88
 
 
 def test_randfloat():
-    assert seed.randfloat(min=0, max=10, step=0.1) == 8.8
+    assert seed.randfloat(a=0, b=10, step=0.1) == 8.8
 
 
 def test_randbool():

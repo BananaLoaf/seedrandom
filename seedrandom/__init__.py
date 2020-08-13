@@ -25,11 +25,6 @@ class SeededRNG:
         if len(unordered) == 0 and len(ordered) == 0:
             return b"\x00" * self._digest_size
 
-        if len(ordered) > 0:
-            for i, elem in enumerate(ordered):
-                # Hash and replace
-                ordered[i] = self._hash_func(elem).digest()
-
         if len(unordered) > 0:
             for i, elem in enumerate(unordered):
                 # Hash bytes and replace
@@ -38,9 +33,16 @@ class SeededRNG:
             # Sort unordered list by integer representation of each hash from lowest to highest
             unordered.sort(key=lambda x: int.from_bytes(x, byteorder="big"))
 
-        # Merge hashes into one string ordered first unordered second and return its hash
-        merged = b"".join(ordered + unordered)
-        return self._hash_func(merged).digest()
+        if len(ordered) > 0:
+            for i, elem in enumerate(ordered):
+                # Hash and replace
+                ordered[i] = self._hash_func(elem).digest()
+
+        # Same as to merge hashes into one string and return its hash
+        h = self._hash_func()
+        for elem in unordered + ordered:
+            h.update(elem)
+        return h.digest()
 
     ################################################################
     def __bytes__(self):
@@ -85,25 +87,25 @@ class SeededRNG:
         return cls.from_bytes(byte_data, hash_func=hash_func)
 
     ################################################################
-    def randint(self, max: int, min: int = 0) -> int:
-        """Random int value in range [min, max]"""
-        assert max > min
-        return min + int(self) % (max - min + 1)  # TODO max - 1
+    def randint(self, a: int, b: int) -> int:
+        """Random int value in range [a, b]"""
+        assert b > a
+        return a + int(self) % (b - a + 1)
 
-    def randfloat(self, max: float, min: float = 0, step: float = 0.1) -> float:
-        """Random float value in range [min, max] with specified step"""
-        assert max > min
+    def randfloat(self, a: float, b: float, step: float = 0.1) -> float:
+        """Random float value in range [a, b] with specified step"""
+        assert b > a
         assert step > 0
 
-        num_of_entries = int((max - min) / step) + 1  # How many possible entries are there
-        entry = int(self) % num_of_entries  # Picking the random entry
-        return round(min + step * entry, len(str(step).split(".")[1]))  # Calc value at entry and round it in an awful way
+        num_of_entries = int((b - a) / step) + 1  # How many possible entries are there
+        entry = int(self) % num_of_entries  # Picking a random entry
+        return round(a + step * entry, len(str(step).split(".")[1]))  # Calc value at an entry and round it in an awful way
 
     def randbool(self) -> bool:
         return [True, False][int(self) % 2]
 
     def randbyte(self) -> bytes:
-        return bytes([self.randint(min=0, max=255)])
+        return bytes([self.randint(a=0, b=255)])
 
 
 if __name__ == '__main__':
