@@ -10,7 +10,7 @@ payloads = [
     ([b"First", b"Second"], {"ordered": [b"First_ord", b"Second_ord"]}),
     ([b"Second", b"First"], {"ordered": [b"First_ord", b"Second_ord"]})
 ]
-seed = SeededRNG(*payloads[3][0], **payloads[3][1], hash_func=hashlib.md5)
+rng = SeededRNG(*payloads[3][0], **payloads[3][1], hash_func=hashlib.md5)
 
 
 to_type = [None] * len(payloads)
@@ -89,27 +89,27 @@ to_type[4] = to_type[3]  # Outputs from 3 and 4 payloads have to be the same
 @pytest.mark.parametrize("dtype", [bytes, int])
 def test_to_type(dtype, hash_func, payload):
     payload_id = payloads.index(payload)
-    seed = SeededRNG(
+    rng = SeededRNG(
         *payload[0],
         **payload[1],
         hash_func=hash_func)
-    assert dtype(seed) == to_type[payload_id][dtype][hash_func.__name__]
+    assert dtype(rng) == to_type[payload_id][dtype][hash_func.__name__]
 
 
 @pytest.mark.parametrize("payload", payloads)
 @pytest.mark.parametrize("hash_func", hash_funcs)
 def test_eq_seed(hash_func, payload):
-    seed1 = SeededRNG(
+    rng1 = SeededRNG(
         *payload[0],
         **payload[1],
         hash_func=hash_func
     )
-    seed2 = SeededRNG(
+    rng2 = SeededRNG(
         *payload[0],
         **payload[1],
         hash_func=hash_func
     )
-    assert seed1 == seed2
+    assert rng1 == rng2
 
 
 @pytest.mark.parametrize("payload", payloads)
@@ -117,12 +117,12 @@ def test_eq_seed(hash_func, payload):
 @pytest.mark.parametrize("dtype", [bytes, int])
 def test_eq_type(dtype, hash_func, payload):
     payload_id = payloads.index(payload)
-    seed = SeededRNG(
+    rng = SeededRNG(
         *payload[0],
         **payload[1],
         hash_func=hash_func
     )
-    assert seed == to_type[payload_id][dtype][hash_func.__name__]
+    assert rng == to_type[payload_id][dtype][hash_func.__name__]
 
 
 ################################################################
@@ -131,7 +131,7 @@ def test_eq_type(dtype, hash_func, payload):
 @pytest.mark.parametrize("dtype", [bytes, int])
 def test_from_type(dtype, hash_func, payload):
     payload_id = payloads.index(payload)
-    seed = SeededRNG(
+    rng = SeededRNG(
         *payload[0],
         **payload[1],
         hash_func=hash_func
@@ -142,46 +142,46 @@ def test_from_type(dtype, hash_func, payload):
         int: SeededRNG.from_int
     }
 
-    assert seed == funcs_from[dtype](seed_data, hash_func=hash_func)
+    assert rng == funcs_from[dtype](seed_data, hash_func=hash_func)
 
 
 ################################################################
 def test_randint():
-    assert seed.randint(a=0, b=100) == 12
+    assert rng.randint(a=0, b=100) == 12
 
 
 def test_randfloat():
-    assert seed.randfloat(a=0, b=10, step=0.1) == 1.2
+    assert rng.randfloat(a=0, b=10, step=0.1) == 1.2
 
 
 def test_randbool():
-    assert seed.randbool() is False
+    assert rng.randbool() is False
 
 
 def test_randbyte():
-    assert seed.randbyte() == b'o'
+    assert rng.randbyte() == b'o'
 
 
 ################################################################
 @pytest.mark.parametrize("hash_func", hash_funcs)
 def test_unordered(hash_func):
-    seed1 = SeededRNG(b"First", b"Second", hash_func=hash_func)
-    seed2 = SeededRNG(b"Second", b"First", hash_func=hash_func)
-    assert seed1 == seed2
+    rng1 = SeededRNG(b"First", b"Second", hash_func=hash_func)
+    rng2 = SeededRNG(b"Second", b"First", hash_func=hash_func)
+    assert rng1 == rng2
 
 
 @pytest.mark.parametrize("hash_func", hash_funcs)
 def test_ordered(hash_func):
-    seed1 = SeededRNG(ordered=[b"First_ord", b"Second_ord"], hash_func=hash_func)
-    seed2 = SeededRNG(ordered=[b"Second_ord", b"First_ord"], hash_func=hash_func)
-    assert seed1 != seed2
+    rng1 = SeededRNG(ordered=[b"First_ord", b"Second_ord"], hash_func=hash_func)
+    rng2 = SeededRNG(ordered=[b"Second_ord", b"First_ord"], hash_func=hash_func)
+    assert rng1 != rng2
 
 
 @pytest.mark.parametrize("hash_func", hash_funcs)
 def test_unordered_ordered(hash_func):
-    seed1 = SeededRNG(b"First", b"Second", ordered=[b"First_ord", b"Second_ord"], hash_func=hash_func)
-    seed2 = SeededRNG(b"First", b"Second", ordered=[b"Second_ord", b"First_ord"], hash_func=hash_func)
-    assert seed1 != seed2
+    rng1 = SeededRNG(b"First", b"Second", ordered=[b"First_ord", b"Second_ord"], hash_func=hash_func)
+    rng2 = SeededRNG(b"First", b"Second", ordered=[b"Second_ord", b"First_ord"], hash_func=hash_func)
+    assert rng1 != rng2
 
 
 @pytest.mark.parametrize("hash_func", hash_funcs)
