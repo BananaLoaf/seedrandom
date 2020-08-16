@@ -1,5 +1,5 @@
 import hashlib
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 
 __version__ = "1.4.1"
 
@@ -7,11 +7,11 @@ DEFAULT_HASH_FUNC = hashlib.md5
 
 
 class SeededRNG:
-    def __init__(self, *unordered, ordered: Optional[list] = None, hash_func: Callable = DEFAULT_HASH_FUNC):
+    def __init__(self, *unordered, ordered: Optional[Union[tuple, list]] = None, hash_func: Callable = DEFAULT_HASH_FUNC):
         if ordered is None:
-            ordered = []
+            ordered = ()
 
-        for elem in list(unordered) + ordered:
+        for elem in unordered + tuple(ordered):
             assert isinstance(elem, bytes), "All elements must be bytes"
 
         assert hash_func.__module__ in ["_hashlib", "_blake2"]
@@ -19,9 +19,12 @@ class SeededRNG:
         self._source = (unordered, tuple(ordered))
         self._hash_func = hash_func
         self._digest_size = hash_func().digest_size
-        self._seed = self._generate(unordered=list(unordered), ordered=ordered)
+        self._seed = self._generate(unordered=unordered, ordered=tuple(ordered))
 
-    def _generate(self, unordered: list, ordered: list) -> bytes:
+    def _generate(self, unordered: tuple, ordered: tuple) -> bytes:
+        unordered = list(unordered)
+        ordered = list(ordered)
+
         if len(unordered) == 0 and len(ordered) == 0:
             return b"\x00" * self._digest_size
 
@@ -63,6 +66,9 @@ class SeededRNG:
 
         else:
             return NotImplemented
+
+    def __hash__(self):
+        return int(self)
 
     ################################################################
     @classmethod
@@ -106,9 +112,3 @@ class SeededRNG:
 
     def randbyte(self) -> bytes:
         return bytes([self.randint(a=0, b=255)])
-
-
-if __name__ == '__main__':
-    seed2 = SeededRNG(b"Test")
-    print(bytes(seed2))
-    print(int(seed2))
