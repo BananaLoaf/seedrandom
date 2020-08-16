@@ -1,124 +1,115 @@
 import hashlib
+from typing import Optional, Callable, Union
 
-__version__ = "1.4.1"
+PACKAGE_NAME = "seedrandom"
+__version__ = "2.0"
 
-SEED_LEN = 64
+DEFAULT_HASH_FUNC = hashlib.md5
 
 
-class Seed:
-    def __init__(self, *source, ordered: list = [], hash_func=hashlib.sha256):
-        if len(source) == 0 and len(ordered) == 0:
-            raise AttributeError("arguments missing")
-        if callable(hash_func):
-            if hasattr(hash_func(), "digest"):
-                if not isinstance(hash_func().digest(), bytes):
-                    raise TypeError("digest() method has to return bytes")
-            else:
-                raise AttributeError("hash_func() has no digest() method")
-        else:
-            hash_func()
+class SeededRNG:
+    def __init__(self, *unordered, ordered: Optional[Union[tuple, list]] = None, hash_func: Callable = DEFAULT_HASH_FUNC):
+        if ordered is None:
+            ordered = ()
 
+        for elem in unordered + tuple(ordered):
+            assert isinstance(elem, bytes), "All elements must be bytes"
+
+        assert hash_func.__module__ in ["_hashlib", "_blake2"]
+
+        self._source = (unordered, tuple(ordered))
         self._hash_func = hash_func
-        self._source = (source, ordered)
-        self.seed = self._generate(*source, ordered=ordered, hash_func=hash_func)
+        self._digest_size = hash_func().digest_size
+        self._seed = self._generate(unordered=unordered, ordered=tuple(ordered))
 
-    @property
-    def seed(self):
+    def _generate(self, unordered: tuple, ordered: tuple) -> bytes:
+        unordered = list(unordered)
+        ordered = list(ordered)
+
+        if len(unordered) == 0 and len(ordered) == 0:
+            return b"\x00" * self._digest_size
+
+        if len(unordered) > 0:
+            for i, elem in enumerate(unordered):
+                # Hash bytes and replace
+                unordered[i] = self._hash_func(elem).digest()
+
+            # Sort unordered list by integer representation of each hash from lowest to highest
+            unordered.sort(key=lambda x: int.from_bytes(x, byteorder="big"))
+
+        if len(ordered) > 0:
+            for i, elem in enumerate(ordered):
+                # Hash and replace
+                ordered[i] = self._hash_func(elem).digest()
+
+        # Same as to merge hashes into one string and return its hash
+        h = self._hash_func()
+        for elem in unordered + ordered:
+            h.update(elem)
+        return h.digest()
+
+    ################################################################
+    def __bytes__(self):
         return self._seed
 
-    @seed.setter
-    def seed(self, value):
-        self._seed = b"\x00"*(SEED_LEN - len(value)) + value
+    def __int__(self):
+        return int.from_bytes(self._seed, byteorder="big")
 
-    @seed.getter
-    def seed(self) -> bytes:
-        return self._seed.lstrip(b"\x00")
+    def __eq__(self, other):
+        if isinstance(other, SeededRNG):
+            return self._seed == other._seed
 
-    @staticmethod
-    def _generate(*source, ordered: list = [], hash_func=None) -> bytes:
-        """Generates seed bytes from source bytes"""
-        if source or ordered:
-            if ordered:
-                for i, elem in enumerate(ordered):
-                    # Check types
-                    if not isinstance(elem, bytes):
-                        raise TypeError(f"Non bytes type of '{elem}' is not supported")
-                    # Hash bytes and replace
-                    ordered[i] = hash_func(elem).digest()
-            else:
-                ordered = []
+        elif isinstance(other, bytes):
+            return bytes(self) == other
 
-            if source:
-                unordered = list(source)
-                for i, elem in enumerate(unordered):
-                    # Check types
-                    if not isinstance(elem, bytes):
-                        raise TypeError(f"Non bytes type of '{elem}' is not supported")
-                    # Hash bytes and replace
-                    unordered[i] = hash_func(elem).digest()
+        elif isinstance(other, int):
+            return int(self) == other
 
-                # Sort unordered list by integer representation of each hash from lowest to highest
-                unordered.sort(key=lambda data: int.from_bytes(data, byteorder='big'))
-            else:
-                unordered = []
-
-            # Merge hashes into one string ordered first unordered second and return it's hash
-            merged = b"".join(ordered + unordered)
-            return hash_func(merged).digest()
         else:
-            return b"\x00" * SEED_LEN
+            return NotImplemented
 
-    def randint(self, _max: int, _min: int = 0) -> int:
-        """Random int value in range [_min, _max]"""
-        if _min > _max:
-            raise ValueError("_min can not be bigger than _max")
+    def __hash__(self):
+        return int(self)
 
-        return _min + int(self) % (_max - _min + 1)
+    ################################################################
+    @classmethod
+    def from_bytes(cls, byte_data: bytes, hash_func: Callable = DEFAULT_HASH_FUNC):
+        """
+        :return: SeededRNG
+        """
+        assert len(byte_data) == hash_func().digest_size
+        self = cls(hash_func=hash_func)
+        self._seed = byte_data
+        return self
 
-    def randfloat(self, _max: float, _min: float = 0, step: float = 0.1) -> float:
-        """Random float value in range [_min, _max] with specified step"""
-        if _min > _max:
-            raise ValueError("_min can not be bigger than _max")
-        if step <= 0:
-            raise ValueError("Step can not be less or equal to 0")
+    @classmethod
+    def from_int(cls, int_data: int, hash_func: Callable = DEFAULT_HASH_FUNC):
+        """
+        :return: SeededRNG
+        """
+        try:
+            byte_data = int_data.to_bytes(hash_func().digest_size, byteorder="big")
+        except OverflowError:
+            raise OverflowError("int too big to convert for given hash_func")
+        return cls.from_bytes(byte_data, hash_func=hash_func)
 
-        num_of_entries = int((_max - _min)/step + 1)  # now many possible entries are there
-        entry = int(self) % num_of_entries  # picking the entry
-        return round(_min + step * entry, len(str(step).split(".")))  # calc value at entry, shift it and round it in an awful way
+    ################################################################
+    def randint(self, a: int, b: int) -> int:
+        """Random int value in range [a, b]"""
+        assert b > a
+        return a + int(self) % (b - a + 1)
+
+    def randfloat(self, a: float, b: float, step: float = 0.1) -> float:
+        """Random float value in range [a, b] with specified step"""
+        assert b > a
+        assert step > 0
+
+        num_of_entries = int((b - a) / step) + 1  # How many possible entries are there
+        entry = int(self) % num_of_entries  # Picking a random entry
+        return round(a + step * entry, len(str(step).split(".")[1]))  # Calc value at an entry and round it in an awful way
 
     def randbool(self) -> bool:
-        """Random bool value"""
         return [True, False][int(self) % 2]
 
     def randbyte(self) -> bytes:
-        """Random byte"""
-        return bytes([self.randint(_min=0, _max=255)])
-
-    @classmethod
-    def from_bytes(cls, byte_data: bytes):
-        """Return Seed from user specified bytes"""
-        obj = cls(b"")
-        obj.seed = byte_data
-        return obj
-
-    @classmethod
-    def from_int(cls, int_data: int):
-        """Return Seed from user specified int value"""
-        byte_data = int_data.to_bytes(SEED_LEN, byteorder="big")
-        return cls.from_bytes(byte_data)
-
-    def __bytes__(self):
-        return self.seed
-
-    def __int__(self):
-        return int.from_bytes(self.seed, byteorder="big")
-
-    def __eq__(self, other):
-        if isinstance(other, Seed):
-            return self.seed == other.seed
-        elif isinstance(other, bytes):
-            return bytes(self) == other
-        elif isinstance(other, int):
-            return int(self) == other
-        else:
-            return NotImplemented
+        return bytes([self.randint(a=0, b=255)])
