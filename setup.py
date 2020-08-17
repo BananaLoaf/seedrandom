@@ -17,11 +17,13 @@ setup(
     description="Deterministic seeded RNG",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    keywords=["random", "seed", "generator", "hash", "int", "float", "bool", "bytes"],
+    keywords=["random", "seed", "generator", "hash", "int", "float", "bool", "bytes", "rng", "deterministic"],
 
     url=f"https://github.com/BananaLoaf/seedrandom",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        "Programming Language :: Python :: 3",
+        "Environment :: Console",
+        "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent"])
+        "Operating System :: OS Independent",
+        "Programming Language :: Python :: 3"])
