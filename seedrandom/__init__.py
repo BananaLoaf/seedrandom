@@ -2,7 +2,7 @@ import hashlib
 from typing import Optional, Callable, Union
 
 PACKAGE_NAME = "seedrandom"
-__version__ = "2.1"
+__version__ = "2.2"
 
 DEFAULT_HASH_FUNC = hashlib.md5
 
