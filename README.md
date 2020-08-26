@@ -1,6 +1,11 @@
 # seedrandom
 Deterministic seeded RNG
 
+[![Python Version](https://img.shields.io/pypi/pyversions/seedrandom.svg?color=yellow&style=flat-square)](https://www.python.org/downloads/)
+[![GitHub Licence](https://img.shields.io/github/license/BananaLoaf/seedrandom.svg?color=blue&style=flat-square)](https://github.com/BananaLoaf/seedrandom/blob/master/LICENSE)
+[![Package Version](https://img.shields.io/pypi/v/seedrandom.svg?color=green&style=flat-square)](https://pypi.org/project/seedrandom/)
+
+
 ### Installation / Updating
 ```
 pip install seedrandom
