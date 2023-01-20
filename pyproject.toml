@@ -1,0 +1,46 @@
+[tool.poetry]
+name = "seedrandom"
+version = "0.0.0"
+description = "Proof-of-concept seeded RNG lib"
+authors = ["BananaLoaf <bananaloaf@protonmail.com>"]
+maintainers = ["BananaLoaf <bananaloaf@protonmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/BananaLoaf/seedrandom"
+repository = "https://github.com/BananaLoaf/seedrandom"
+keywords = ["random", "seed", "seeded", "number", "generator", "hash", "int", "float", "bool", "bytes", "rng", "deterministic"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3"
+]
+packages = [
+    { include = "seedrandom" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.1"
+wemake-python-styleguide = "^0.17.0"
+# Flake8-pyproject = "^1.2.2"  # when wemake updates
+
+[tool.isort]
+profile = "wemake"
+src_paths = ["seedrandom", "test"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests/**/*.py",
+]
+
+[build-system]
+requires = ["poetry-core", "poetry-dynamic-versioning"]
+build-backend = "poetry_dynamic_versioning.backend"
+
+[tool.poetry-dynamic-versioning]
+enable = true
