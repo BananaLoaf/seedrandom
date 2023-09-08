@@ -1,29 +1,25 @@
-name: Commit check
+name: Code Quality
 
 on: [push, pull_request]
 
 jobs:
-  commit-check:
+  code-quality:
     runs-on: ubuntu-latest
-    name: Commit check
+    name: Code Quality
     steps:
-      - name: Check out
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Set up Poetry
+      - name: Setup Poetry
         uses: abatilo/actions-poetry@v2
         with:
           poetry-version: "1.3.2"
+
       - name: Install dependencies
         run: poetry install
-
-      - name: pytest
-        run: poetry run pytest
 
       - name: flake8
         run: poetry run flake8
