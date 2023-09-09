@@ -6,7 +6,7 @@ from typing import Callable, Optional, Union
 DEFAULT_HASH_FUNC = hashlib.md5
 
 
-class SeededRNG(object):  # noqa: WPS338
+class SeededRNG(object):
     """Deterministic random number generator."""
 
     def __init__(
@@ -20,10 +20,10 @@ class SeededRNG(object):  # noqa: WPS338
 
         for elem in unordered + tuple(ordered):
             if not isinstance(elem, bytes):
-                raise TypeError('All elements must be bytes')
+                raise TypeError("All elements must be bytes")
 
-        if hash_func.__module__ not in {'_hashlib', '_blake2'}:
-            raise TypeError('Unrecognized hash function')
+        if hash_func.__module__ not in {"_hashlib", "_blake2"}:
+            raise TypeError("Unrecognized hash function")
 
         self._source = (unordered, tuple(ordered))
         self._hash_func = hash_func
@@ -38,7 +38,7 @@ class SeededRNG(object):  # noqa: WPS338
         ordered = list(ordered)
 
         if len(unordered) == 0 and len(ordered) == 0:
-            return b'\x00' * self._digest_size
+            return b"\x00" * self._digest_size
 
         if len(unordered) > 0:
             for itr, elem in enumerate(unordered):
@@ -47,7 +47,7 @@ class SeededRNG(object):  # noqa: WPS338
 
             # Sort unordered list by integer representation of each hash from
             # lowest to highest
-            unordered.sort(key=lambda x: int.from_bytes(x, byteorder='big'))  # noqa: WPS111 E501
+            unordered.sort(key=lambda x: int.from_bytes(x, byteorder="big"))
 
         if len(ordered) > 0:
             for itr, elem in enumerate(ordered):
@@ -65,11 +65,11 @@ class SeededRNG(object):  # noqa: WPS338
         return self._seed
 
     def __int__(self):
-        return int.from_bytes(self._seed, byteorder='big')
+        return int.from_bytes(self._seed, byteorder="big")
 
     def __eq__(self, other):
         if isinstance(other, SeededRNG):
-            return self._seed == other._seed  # noqa: WPS437
+            return self._seed == other._seed
 
         elif isinstance(other, bytes):
             return bytes(self) == other
@@ -91,9 +91,11 @@ class SeededRNG(object):  # noqa: WPS338
     ):
         """Create class from bytes."""
         if len(byte_data) != hash_func().digest_size:
-            raise ValueError('Size of byte_data does not match output size for specified hash function')  # noqa: E501
+            raise ValueError(
+                "Size of byte_data does not match output size for specified hash function"
+            )
         instance = cls(hash_func=hash_func)
-        instance._seed = byte_data  # noqa: WPS437
+        instance._seed = byte_data
         return instance
 
     @classmethod
@@ -102,32 +104,32 @@ class SeededRNG(object):  # noqa: WPS338
         try:
             byte_data = int_data.to_bytes(
                 hash_func().digest_size,
-                byteorder='big',
+                byteorder="big",
             )
         except OverflowError:
-            raise OverflowError('int too big to convert for given hash_func')
+            raise OverflowError("int too big to convert for given hash_func")
         return cls.from_bytes(byte_data, hash_func=hash_func)
 
     ################################################################
-    def randint(self, a: int, b: int) -> int:  # noqa: WPS111
+    def randint(self, a: int, b: int) -> int:
         """Random int value in range [a, b]."""
         if a > b:
-            raise ValueError('a can not be more than b')
+            raise ValueError("a can not be more than b")
         return a + int(self) % (b - a + 1)
 
-    def randfloat(self, a: float, b: float, step: float = 0.1) -> float:  # noqa: WPS111 E501
+    def randfloat(self, a: float, b: float, step: float = 0.1) -> float:
         """Random float value in range [a, b] with specified step."""
         if a > b:
-            raise ValueError('a can not be more than b')
+            raise ValueError("a can not be more than b")
         if step < 0:
-            raise ValueError('step less than 0')
+            raise ValueError("step less than 0")
 
         # How many possible entries are there
         num_of_entries = int((b - a) / step) + 1
         # Picking a random entry
         entry = int(self) % num_of_entries
         # Calc value at an entry and round it in an awful way
-        return round(a + step * entry, len(str(step).split('.')[1]))  # noqa: WPS221 E501
+        return round(a + step * entry, len(str(step).split(".")[1]))
 
     def randbool(self) -> bool:
         """Get random bool."""
@@ -135,4 +137,4 @@ class SeededRNG(object):  # noqa: WPS338
 
     def randbyte(self) -> bytes:
         """Get random byte."""
-        return bytes([self.randint(a=0, b=255)])  # noqa: WPS432
+        return bytes([self.randint(a=0, b=255)])
